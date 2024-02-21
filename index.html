@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopped Servers</title>
+    <script src="http://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="http://php.mail.sysbase-app.com/theme/js/chosen.jquery.min.js" type="text/javascript"></script>
+    <script src="http://php.mail.sysbase-app.com/theme/js/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="http://php.mail.sysbase-app.com/theme/js/jquery.ui.autocomplete.scroll.min.js" type="text/javascript"></script>
+    <script src="http://php.mail.sysbase-app.com/theme/js/jquery.tooltipster.min.js" type="text/javascript"></script>
+    <script src="http://php.mail.sysbase-app.com/theme/js/jquery.easypiechart.min.js" type="text/javascript"></script>
+    <script src="http://php.mail.sysbase-app.com/theme/js/messages-page.js?v=3.8.1" type="text/javascript"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js"></script>
+
+</head>
+
+
+<style>
+    /* Style for the textarea */
+    .textarea-styling {
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      
+        border-radius: 8px;
+        resize: vertical;
+    }
+
+    /* Style for the number input */
+    .input-styling {
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      
+        border-radius: 8px;
+    }
+
+    /* Style for the button */
+.button-styling {
+    background-color: #f7453d;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition-duration: 0.4s;
+}
+
+    /* Hover effect for the button */
+    .button-styling:hover {
+        background-color: white;
+        color: #f7453d;
+    }
+
+    /* Add some basic styling if needed */
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+    background-color: #212121;
+}
+
+    h2 {
+        color: white;
+    }
+
+    h3 {
+        text-align: center;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    textarea,
+    input {
+        width: 100%;
+        /* Adjusted to full width */
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px solid #444;
+        /* Dark border */
+        background-color: #333;
+        /* Dark background */
+        color: white;
+    }
+
+    /* Set the SPF DOMAIN and DOMAIN inputs to be in the same column */
+    #subdomain,
+    #spfdomain {
+        /* Adjusted to full width */
+        box-sizing: border-box;
+        margin-bottom: 10px;
+    }
+
+    /* Center the button */
+    button {
+        padding: 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 10px;
+        color: white;
+    }
+
+    th,
+    td {
+        border: 1px solid #444;
+        /* Dark border */
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #555;
+        /* Dark background */
+    }
+
+    tr:nth-child(even) {
+        background-color: #444;
+        /* Dark background */
+    }
+
+    tr:nth-child(odd) {
+        background-color: #333;
+        /* Dark background */
+    }
+
+    .pushable {
+        position: relative;
+        background: transparent;
+        margin: 10px;
+        padding: 0px;
+        border: none;
+        cursor: pointer;
+        outline-offset: 4px;
+        outline-color: deeppink;
+        transition: filter 250ms;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    }
+
+    .shadow {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background: hsl(0, 0%, 11%);
+        border-radius: 8px;
+        filter: blur(2px);
+        will-change: transform;
+        transform: translateY(2px);
+        transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
+    }
+
+    .edge {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        border-radius: 8px;
+        background: linear-gradient(to right,
+                hsl(210, 64%, 60%) 0%,
+                hsl(210, 100%, 63%) 8%,
+                hsl(210, 64%, 60%) 92%,
+                hsl(210, 64%, 50%) 100%);
+    }
+
+    .front {
+        display: block;
+        position: relative;
+        border-radius: 8px;
+        background: #f7453d;
+        padding: 16px 32px;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+            Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-size: 1rem;
+        transform: translateY(-4px);
+        transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
+    }
+
+    .pushable:hover {
+        filter: brightness(110%);
+    }
+
+    .pushable:hover .front {
+        transform: translateY(-6px);
+        transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+    }
+
+    .pushable:active .front {
+        transform: translateY(-2px);
+        transition: transform 34ms;
+    }
+
+    .pushable:hover .shadow {
+        transform: translateY(4px);
+        transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+    }
+
+    .pushable:active .shadow {
+        transform: translateY(1px);
+        transition: transform 34ms;
+    }
+
+    .pushable:focus:not(:focus-visible) {
+        outline: none;
+    }
+
+    #res {
+        display: none;
+    }
+
+    input,
+    textarea,
+    select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px #f7453d solid;
+        border-radius: 4px;
+        background-color: #2c2c2c;
+        color: white;
+    }
+
+    input,
+    textarea,
+    select:active {
+        outline: none;
+    }
+
+    .coolinput {
+        display: flex;
+        flex-direction: column;
+        width: fit-content;
+        position: static;
+        width: 50%;
+    }
+
+    .coolinput label.text {
+        font-size: 0.75rem;
+        color: #f7453d;
+        font-weight: 700;
+        position: relative;
+        top: 0.5rem;
+        margin: 0 0 0 7px;
+        padding: 0 3px;
+        background: #2c2c2c;
+        width: fit-content;
+    }
+
+    .coolinput input[type=text].input {
+        padding: 11px 10px;
+        font-size: 0.75rem;
+        color: white;
+        border: 1px #f7453d solid;
+        border-radius: 5px;
+        background: #2d2d2d;
+    }
+
+    .coolinput input[type=text].input:focus {
+        outline: none;
+    }
+
+    .coolinput textarea:focus {
+        outline: none;
+    }
+
+    .coolinput textarea {
+        padding: 11px 10px;
+        font-size: 0.75rem;
+        color: white;
+        border: 1px #f7453d solid;
+        border-radius: 5px;
+        background: #2c2c2c;
+        resize: none;
+        height: 100px;
+    }
+	
+
+
+
+</style>
+
+
+
+<body>
+
+    <!-- Add your existing HTML content here -->
+
+    <!-- Add the following HTML for the textarea, input, and button -->
+<div class="container">
+        <label for="serverInfo" class="text">Enter Servers details:</label>
+
+        <textarea id="serverInput" class="textarea-styling"
+            placeholder="Enter jobId, Server names, and optional alias (one per line)..."></textarea>
+			<label for="serverInfo" class="text">Enter time to recheck:</label>
+        <input id="timeInput" class="input-styling" type="number" placeholder="Check bounce every (in seconds)">
+        <button id="searchButton" class="button-styling">START</button>
+        <table border="1" id="serverTable">
+            <thead>
+                <tr>
+                    <th>JobId</th>
+                    <th>Server</th>
+                    <th>Received</th>
+                    <th>Delivered</th>
+                    <th>Bounce</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="stoppedServersTableBody"></tbody>
+        </table>
+    </div>
+
+
+    <script>
+        function initializeFirebase() {
+            var firebaseConfig = {
+                apiKey: "AIzaSyBgcrmA7Vtlgg68jKev2IL1mHeSy3n-JGI",
+                authDomain: "bounceprjkt.firebaseapp.com",
+                projectId: "bounceprjkt",
+                storageBucket: "bounceprjkt.appspot.com",
+                messagingSenderId: "186140880571",
+                appId: "1:186140880571:web:115dd025763064d7d3039e"
+            };
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        function loadFirestore() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        function loadFirebaseSDK() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js';
+                script.onload = () => {
+                    initializeFirebase();
+                    resolve();
+                };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // Once Firebase SDK is loaded, initialize Firebase and Firestore and execute your script
+        loadFirebaseSDK()
+            .then(() => loadFirestore())
+            .then(() => {
+                // Initialize Firestore
+                const firestore = firebase.firestore();
+
+                // Get references to HTML elements
+                var serverInput = document.getElementById('serverInput');
+                var timeInput = document.getElementById('timeInput');
+                var searchButton = document.getElementById('searchButton');
+
+                // Array to store searched servers with jobId, status, and results
+                var searchedServersArray = [];
+                var stoppedServersArray = [];
+
+                // Function to fetch and search Firestore data
+                function performSearch() {
+                    // Clear searchedServersArray before starting a new search
+                    searchedServersArray = [];
+
+                    var jobServerPairs = serverInput.value.trim().split('\n').map(pair => pair.trim().toLowerCase().split(' '));
+
+                    // Perform search logic for each server name
+                    jobServerPairs.forEach(pair => {
+                        if (pair.length >= 2) { // Ensuring at least jobId and server name are provided
+                            var jobId = pair[0];
+                            var serverName = pair[1];
+                            var AliasGRP = pair.slice(2).join(' '); // Get optional info if available
+
+                            // Perform search in Firestore
+                            firestore.collection("servers").where("Server", "==", serverName).get()
+                                .then((querySnapshot) => {
+                                    querySnapshot.forEach((doc) => {
+                                        var data = doc.data();
+                                        var searchResult = [data]; // Wrap data in an array for consistency with previous logic
+                                        // Log the search result for the specific pair
+                                        console.log(`Search result for ${jobId} - ${serverName}:`, searchResult);
+
+                                        // Check if the server is already in the array
+                                        var existingServer = searchedServersArray.find(server => server.Server === serverName);
+
+                                        if (!existingServer) {
+                                            // Create an object with jobId, status, and result for the searched servers
+                                            var searchedServerInfo = {
+                                                "Server": searchResult.length > 0 ? searchResult[0].Server : "",
+                                                "Mailer": searchResult.length > 0 ? searchResult[0].Mailer : "",
+                                                "Received": searchResult.length > 0 ? searchResult[0].Received : "",
+                                                "Delivered": searchResult.length > 0 ? searchResult[0].Delivered : "",
+                                                "Bounced": searchResult.length > 0 ? searchResult[0].Bounced : "",
+                                                "Hard_Bounced": searchResult.length > 0 ? searchResult[0].Hard_Bounced : "",
+                                                "Status": "Inprocess",
+                                                "JobID": jobId, // Add JobID property
+                                                "AliasGRP": AliasGRP // Store optional info
+                                            };
+
+                                            // Store the searched server information in the searchedServersArray
+                                            searchedServersArray.push(searchedServerInfo);
+                                        } else {
+                                            // If the server already exists, update the JobID and reset the Status
+                                            existingServer.JobID = jobId;
+                                            existingServer.Status = "Inprocess";
+                                            existingServer.AliasGRP = AliasGRP; // Update optional info
+                                        }
+                                    });
+                                })
+                                .catch((error) => {
+                                    console.error("Error searching Firestore:", error);
+                                });
+                        }
+                    });
+
+                    // Log the array for later use
+                    console.log("Searched servers array:", searchedServersArray);
+                    // Set up the periodic check
+                    // Set up the periodic check
+                    var intervalInSeconds = parseInt(timeInput.value);
+                    var intervalInMilliseconds = intervalInSeconds * 1000; // Convert seconds to milliseconds
+                    setInterval(checkBounceValues, intervalInMilliseconds); // Set interval based on user input in seconds
+                    // Set interval based on user input
+                }
+
+                // Function to check bounce values
+                function checkBounceValues() {
+                    searchedServersArray.forEach(server => {
+                        // Perform search in Firestore
+                        firestore.collection("servers").where("Server", "==", server.Server).get()
+                            .then((querySnapshot) => {
+                                querySnapshot.forEach((doc) => {
+                                    var data = doc.data();
+                                    var updatedSearchResult = [data]; // Wrap data in an array for consistency with previous logic
+
+                                    if (updatedSearchResult.length > 0) {
+                                        // Compare bounce values
+                                        var oldBounce = parseInt(server.Bounced, 10);
+                                        var newBounce = parseInt(updatedSearchResult[0].Bounced, 10);
+
+                                        if (newBounce - oldBounce > 350) {
+                                            // Update the status to "Stopped"
+                                            server.Status = "Stopped";
+
+                                            // Save the stopped server to the "Stopped" collection
+                                            firestore.collection("Stopped").doc(server.Server).set({
+                                                Server: server.Server || "", // Provide a default value if server.Server is undefined
+                                                Mailer: server.Mailer || "", // Provide a default value if server.Mailer is undefined
+                                                Received: server.Received || "", // Provide a default value if server.Received is undefined
+                                                Delivered: server.Delivered || "", // Provide a default value if server.Delivered is undefined
+                                                Bounced: server.Bounced || "", // Provide a default value if server.Bounced is undefined
+                                                Hard_Bounced: server.Hard_Bounced || "", // Provide a default value if server.Hard_Bounced is undefined
+                                                Status: server.Status || "", // Provide a default value if server.Status is undefined
+                                                JobID: server.JobID || "" // Provide a default value if server.JobID is undefined
+                                            })
+                                                .then(() => {
+                                                    console.log(`Server ${server.Server} with JobID ${server.JobID} is Stopped.`);
+                                                })
+                                                .catch(error => {
+                                                    console.error("Error adding document to Stopped collection:", error);
+                                                });
+                                            // Check if the server is already in the stopped servers array
+                                            var existingStoppedServer = stoppedServersArray.find(stopServer => stopServer.Server === server.Server);
+
+                                            if (!existingStoppedServer) {
+                                                // Append the stopped server to the array
+                                                stoppedServersArray.push(server);
+                                            }
+
+                                            // Assuming GetStatus is a function you have defined elsewhere
+                                            GetStatus(server.JobID, server.Server, 'hardkill');
+                                            GetStatus(server.JobID, server.Server, 'hardkill', server.AliasGRP);
+
+                                            console.log(`Server ${server.Server} with JobID ${server.JobID} is Stopped.`);
+                                        }
+                                    }
+                                });
+                            })
+                            .catch((error) => {
+                                console.error("Error searching Firestore:", error);
+                            });
+                    });
+
+                    // Update the searchedServersArray with new data
+                    searchedServersArray.forEach(server => {
+                        // Perform search in Firestore
+                        firestore.collection("servers").where("Server", "==", server.Server).get()
+                            .then((querySnapshot) => {
+                                querySnapshot.forEach((doc) => {
+                                    var data = doc.data();
+                                    var updatedSearchResult = [data]; // Wrap data in an array for consistency with previous logic
+
+                                    if (updatedSearchResult.length > 0) {
+                                        server.Received = updatedSearchResult[0].Received;
+                                        server.Delivered = updatedSearchResult[0].Delivered;
+                                        server.Bounced = updatedSearchResult[0].Bounced;
+                                        server.Hard_Bounced = updatedSearchResult[0].Hard_Bounced;
+                                    }
+                                });
+                            })
+                            .catch((error) => {
+                                console.error("Error searching Firestore:", error);
+                            });
+                    });
+
+                    // Log the updated array for later use
+                    console.log("Updated servers array:", searchedServersArray);
+
+                    // Log the stopped servers
+                    console.log("Stopped servers array:", stoppedServersArray);
+
+                }
+                searchButton.addEventListener("click", performSearch);
+            })
+            .catch(error => {
+                console.error('Error loading Firebase SDK:', error);
+            });
+    </script>
+    <script>
+        // Your existing Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyBgcrmA7Vtlgg68jKev2IL1mHeSy3n-JGI",
+            authDomain: "bounceprjkt.firebaseapp.com",
+            projectId: "bounceprjkt",
+            storageBucket: "bounceprjkt.appspot.com",
+            messagingSenderId: "186140880571",
+            appId: "1:186140880571:web:115dd025763064d7d3039e"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        // Initialize Firestore
+        const firestore = firebase.firestore();
+
+        // Function to fetch and display stopped servers
+        function displayStoppedServers() {
+            const stoppedServersTableBody = document.getElementById('stoppedServersTableBody');
+            const title = document.title; // Get the original document title
+
+            // Clear existing rows
+            stoppedServersTableBody.innerHTML = '';
+
+            // Fetch stopped servers from Firestore and add real-time listener
+            firestore.collection("Stopped").onSnapshot((querySnapshot) => {
+                let serverCount = 0; // Initialize the counter
+
+                querySnapshot.forEach((doc) => {
+                    var serverData = doc.data();
+
+                    // Increment the counter for each server
+                    serverCount++;
+
+                    // Create a new row in the table
+                    var row = stoppedServersTableBody.insertRow();
+
+                    // Add cells with server data
+                    var jobIdCell = row.insertCell(0);
+                    var serverCell = row.insertCell(1);
+                    var receivedCell = row.insertCell(2);
+                    var deliveredCell = row.insertCell(3);
+                    var bounceCell = row.insertCell(4);
+                    var actionCell = row.insertCell(5);
+
+                    jobIdCell.textContent = serverData.JobID || '';
+                    serverCell.textContent = serverData.Server || '';
+                    receivedCell.textContent = serverData.Received || '';
+                    deliveredCell.textContent = serverData.Delivered || '';
+                    bounceCell.textContent = serverData.Bounced || '';
+
+                    // Add delete button with an onclick event to show a confirmation popup
+                    var deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.addEventListener('click', function () {
+                        showConfirmationPopup(serverData.Server);
+                    });
+                    actionCell.appendChild(deleteButton);
+                });
+
+                // Update the document title with the server count
+                document.title = `(${serverCount}) ${title}`;
+            });
+        }
+
+        // Function to delete a server from Firestore
+        function deleteServer(serverName) {
+            firestore.collection("Stopped").doc(serverName).delete()
+                .then(() => {
+                    console.log(`Server ${serverName} deleted successfully.`);
+                })
+                .catch((error) => {
+                    console.error("Error deleting server:", error);
+                });
+        }
+
+        // Function to show a confirmation popup before deleting a server
+        function showConfirmationPopup(serverName) {
+            var confirmed = confirm(`Are you sure you want to delete server "${serverName}" permanently?`);
+            if (confirmed) {
+                deleteServer(serverName);
+                refreshData();
+            }
+        }
+
+        // Function to refresh data
+        function refreshData() {
+            displayStoppedServers();
+            //   document.getElementById('refreshMessage').innerHTML = 'Real-time updates enabled...';
+        }
+
+        // Call the function to display stopped servers on page load
+        displayStoppedServers();
+    </script>
+</body>
+
+</html>
